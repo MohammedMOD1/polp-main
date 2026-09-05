@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>محمد | نظام متطور</title>
+<style>
+  :root {
+    --primary: #0a84ff;
+    --secondary: #5e5ce6;
+    --accent: #ff3d57;
+    --bg-dark: #0a0a0a;
+    --bg-card: #1a1a2e;
+    --text-main: #ffffff;
+    --text-muted: #a0a0b0;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+    color: var(--text-main);
+    font-family: 'Segoe UI', 'Tajawal', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #container {
+    max-width: 500px;
+    margin: 40px;
+    padding: 40px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  #container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.1) 0%, transparent 70%);
+    animation: pulse 8s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+  
+  #brand {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    margin-bottom: 30px;
+    color: var(--primary);
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+  }
+  
+  #wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  #state {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: glow 3s ease-in-out infinite;
+  }
+  
+  @keyframes glow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+  }
+  
+  #det {
+    font-size: 14px;
+    opacity: 0.8;
+    line-height: 1.8;
+    color: var(--text-muted);
+  }
+  
+  #det b {
+    color: var(--text-main);
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  #cache {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 10px;
+    min-height: 20px;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(10, 132, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  #cache.cacheok {
+    opacity: 1;
+    background: rgba(94, 92, 230, 0.2);
+    border: 1px solid var(--secondary);
+  }
+  
+  .ok { 
+    color: #00ff88; 
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+  .bad { 
+    color: #ff3d57; 
+    text-decoration: underline;
+    text-shadow: 0 0 10px rgba(255, 61, 87, 0.5);
+  }
+  .warn { 
+    color: #ffd60a; 
+    text-shadow: 0 0 10px rgba(255, 214, 10, 0.5);
+  }
+  
+  .btn {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(10, 132, 255, 0.5);
+  }
+  
+  .btn:active {
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="brand">محمد | نظام متطور</div>
+  <div id="wrap">
+    <div id="state">جاري الكشف عن النظام...</div>
+    <div id="det"></div>
+    <div id="cache"></div>
+    <button class="btn" id="actionBtn">اضغط للبدء</button>
+  </div>
+</div>
+
+
+<script>
+(function () {
+    var stateEl = document.getElementById("state");
+    var detEl = document.getElementById("det");
+    var cacheEl = document.getElementById("cache");
+    var actionBtn = document.getElementById("actionBtn");
+    
+    function setState(t, c) { 
+        stateEl.textContent = t; 
+        stateEl.className = c || ""; 
+    }
+    
+    function setCache(t, ok) { 
+        cacheEl.textContent = t; 
+        cacheEl.className = ok ? "cacheok" : ""; 
+    }
+    
+    var params = new URLSearchParams(location.search);
+
+    var key = null, fwnum = null;
+    var m = /PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
+    if (m) {
+        var minor = parseInt(m[2], 16);
+        var ms = minor.toString(16);
+        if (ms.length < 2) ms = "0" + ms;
+        key = m[1] + "." + ms;
+        fwnum = parseInt(m[1], 10) * 100 + parseInt(ms, 10);
+    }
+    
+    var bug = null, why = "";
+    var forced = params.get("bug");
+    if (forced === "lapse" || forced === "poops") {
+        bug = forced; why = "forced via ?bug=" + forced;
+    } else if (!key) {
+        why = "user-agent is not a playstation 4";
+    } else if (fwnum <= 1202) {
+        bug = "lapse"; why = key + " <= 12.02";
+    } else if (fwnum >= 1250) {
+        bug = "poops"; why = key + " >= 12.50";
+    } else {
+        why = key + " -- no working bug (lapse ends at 12.02, poops needs 12.50)";
+    }
+    
+    detEl.innerHTML = "firmware <b>" + (key || "unknown") + "</b>"
+        + " &middot; bug <b>" + (bug || "none") + "</b> &middot; " + why;
+
+    if (!bug) { 
+        setState("نظام غير مدعوم", "bad"); 
+        actionBtn.textContent = "إعادة المحاولة";
+        actionBtn.style.display = "block";
+        actionBtn.onclick = function() { location.reload(); };
+        return; 
+    }
+
+    var target = (bug === "lapse" ? "lapse.html" : "poops.html")
+        + location.search;
+    
+    function go() { 
+        setState("جاري تحميل السلسلة...", "warn");
+        actionBtn.textContent = "جاري التحميل...";
+        actionBtn.disabled = true;
+        location.replace(target); 
+    }
+
+    function waitForTap(msg, action) { 
+        setState(msg, "warn");
+        actionBtn.textContent = "اضغط للبدء";
+        actionBtn.disabled = false;
+        
+        function fire() {
+            window.removeEventListener("click", fire);
+            window.removeEventListener("keydown", fire);
+            action();
+        }
+        window.addEventListener("click", fire);
+        window.addEventListener("keydown", fire);
+    }
+
+    var ac = window.applicationCache;
+    if (!ac || !document.documentElement.hasAttribute("manifest")) {
+        go();
+    } else if (!navigator.onLine) {
+        setCache("غير متصل -- من الذاكرة المؤقتة", true);
+        go();
+    } else if (ac.status === ac.IDLE) {
+        setCache("مخزّن في الذاكرة المؤقتة", true);
+        go();
+    } else if (ac.status === ac.UPDATEREADY) {
+        try { ac.swapCache(); } catch (e) {}
+        setCache("تم تنزيل التحديث", true);
+        waitForTap("التحديث جاهز -- اضغط X أو انقر لإعادة التحميل والتشغيل",
+                   function () { 
+                       actionBtn.textContent = "جاري إعادة التحميل...";
+                       location.reload(); 
+                   });
+    } else {
+        setCache("جاري التحقق من الذاكرة المؤقتة...");
+        ac.addEventListener("downloading",
+            function () { setCache("جاري تخزين للوضع غير المتصل (أول تشغيل)..."); }, false);
+        ac.addEventListener("progress", function (e) {
+            if (e && e.total)
+                setCache("جاري التخزين " + Math.round((e.loaded / e.total) * 100) + "%");
+        }, false);
+
+        ac.addEventListener("cached", function () {
+            setCache("مخزّن للاستخدام غير المتصل", true);
+            waitForTap("مخزّن (أول تشغيل) -- اضغط X أو انقر للتشغيل", go);
+        }, false);
+        ac.addEventListener("updateready", function () {
+            try { ac.swapCache(); } catch (e) {}
+            setCache("تم تنزيل التحديث", true);
+            waitForTap("التحديث جاهز -- اضغط X أو انقر لإعادة التحميل والتشغيل",
+                       function () { 
+                           actionBtn.textContent = "جاري إعادة التحميل...";
+                           location.reload(); 
+                       });
+        }, false);
+
+        ac.addEventListener("noupdate", function () {
+            setCache("مخزّن -- جاهز للوضع غير المتصل", true);
+            go();
+        }, false);
+        ac.addEventListener("error", function () {
+            setCache("الذاكرة المؤقتة غير متاحة");
+            waitForTap("فشل الذاكرة المؤقتة -- اضغط X أو انقر للتشغيل على أي حال", go);
+        }, false);
+        ac.addEventListener("obsolete", function () {
+            setCache("الذاكرة المؤقتة عفا عليها الزمن");
+            waitForTap("الذاكرة المؤقتة عفا عليها الزمن -- اضغط X أو انقر للتشغيل", go);
+        }, false);
+    }
+    
+    // تحديث الزر عند النقر
+    if (actionBtn) {
+        actionBtn.addEventListener('click', function() {
+            if (bug) {
+                go();
+            }
+        });
+    }
+})();
+</script>
+</body>
+</html>
