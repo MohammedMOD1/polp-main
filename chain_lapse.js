@@ -293,7 +293,7 @@ function makeRpc(worker) {
 
         await new Promise(function (r) { setTimeout(r, 0); });
         const carrier = await establishPrimitive({
-            maxAttempts: 6,
+            maxAttempts: 1,
 
             onEvent: function (tag, detail, attempt) {
                 mark(tag, (attempt != null ? '[' + attempt + '] ' : '')
