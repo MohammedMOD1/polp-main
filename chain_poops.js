@@ -2262,10 +2262,22 @@ let allDone = false;
                         && params.get("payload") !== "0") {
                         state("payload...", "warn");
                         const sz = (payload.length + 0x3fff) & ~0x3fff;
-                        const m = sc(SYS.mmap, 0, sz, 7, 0x1002, -1, 0);
+                        let m = sc(SYS.mmap, 0, sz, 7, 0x1002, -1, 0);
+                        let mapMode = "private-anon";
+                        let mapErr = m.i32 === -1 ? errno() : 0;
+                        if (m.i32 === -1) {
+                            const jitFd = sc(SYS.jitshm_create, 0, sz, 7).i32;
+                            if (jitFd >= 0) {
+                                m = sc(SYS.mmap, 0, sz, 7, 1, jitFd, 0);
+                                sc(SYS.close, jitFd);
+                                mapMode = "jit-shared";
+                                mapErr = m.i32 === -1 ? errno() : 0;
+                            }
+                        }
                         const entry = new int64(m.lo, m.hi);
                         mark("PAYLOAD-MAP", "size=0x" + sz.toString(16)
-                            + " rwx=" + entry);
+                            + " rwx=" + mapMode + " " + entry
+                            + (m.i32 === -1 ? " errno=" + mapErr : ""));
                         if (entry.hi > 0) {
                             for (let i = 0; i < payload.length; ++i)
                                 p.write1(entry.add32(i), payload[i]);

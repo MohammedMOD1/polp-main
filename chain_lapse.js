@@ -3341,11 +3341,21 @@ function makeRpc(worker) {
 
                                     const psize = (payload.length + 0x3fff) & ~0x3fff;
                                     const pr = PROT_READ | PROT_WRITE | PROT_EXEC;
-                                    const em = scAny(SYS9.mmap, 0, psize, pr,
+                                    let em = scAny(SYS9.mmap, 0, psize, pr,
                                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                                    let mapMode = "private-anon";
+                                    if (em.i32 === -1) {
+                                        const jitFd = scAny(SYS9.jitshm_create, 0, psize, pr).i32;
+                                        if (jitFd >= 0) {
+                                            em = scAny(SYS9.mmap, 0, psize, pr,
+                                                1, jitFd, 0);
+                                            scAny(SYS.close, jitFd);
+                                            mapMode = "jit-shared";
+                                        }
+                                    }
                                     const entry = new int64(em.lo, em.hi);
                                     mark("PAYLOAD-MAP", "mmap(0, 0x" + psize.toString(16)
-                                        + ", rwx, PRIVATE|ANON) = " + entry);
+                                        + ", rwx, " + mapMode + ") = " + entry);
                                     const entryOk = em.i32 !== -1
                                         && !(entry.low === 0 && entry.hi === 0);
                                     check("the payload has " + payload.length
