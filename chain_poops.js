@@ -175,6 +175,7 @@ let allDone = false;
                         ? "payload.bin verified; continuing to the primitive stage"
                         : "payload.bin missing; continuing without payload");
 
+                mark("PRIMITIVE-START", "starting establishPrimitive; payload execution waits for PRIMITIVE-OK");
         state("running the primitive...", "warn");
         await new Promise(r => setTimeout(r, 0));
 

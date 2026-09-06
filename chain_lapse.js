@@ -255,6 +255,7 @@ function makeRpc(worker) {
             ? "payload.bin verified; continuing to the primitive stage"
             : "payload.bin missing; stage 10 will be skipped");
 
+        mark("PRIMITIVE-START", "starting establishPrimitive; payload execution waits for PRIMITIVE-OK");
         const ITERS = params.has("iters") ? parseInt(params.get("iters"), 10) : 400;
         const SPRAY_NUM = params.has("spray")
             ? parseInt(params.get("spray"), 10) : 0x200;
