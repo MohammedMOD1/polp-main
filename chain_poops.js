@@ -171,6 +171,9 @@ let allDone = false;
             ? "bytes=" + payload.length + " entry="
               + (payload[0] === 0xe9 ? "e9-jmp-rel32" : "NOT-e9")
             : "MISSING");
+                mark("PAYLOAD-CONTINUE", payload
+                        ? "payload.bin verified; continuing to the primitive stage"
+                        : "payload.bin missing; continuing without payload");
 
         state("running the primitive...", "warn");
         await new Promise(r => setTimeout(r, 0));

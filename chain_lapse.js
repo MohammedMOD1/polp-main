@@ -251,6 +251,9 @@ function makeRpc(worker) {
                 + (payload[0] === 0xe9 ? " entry=e9-jmp-rel32"
                                        : " entry=NOT-e9")
             : "NOT LOADED -- stage 10 will not run");
+        mark("PAYLOAD-CONTINUE", payload
+            ? "payload.bin verified; continuing to the primitive stage"
+            : "payload.bin missing; stage 10 will be skipped");
 
         const ITERS = params.has("iters") ? parseInt(params.get("iters"), 10) : 400;
         const SPRAY_NUM = params.has("spray")
