@@ -171,17 +171,13 @@ let allDone = false;
             ? "bytes=" + payload.length + " entry="
               + (payload[0] === 0xe9 ? "e9-jmp-rel32" : "NOT-e9")
             : "MISSING");
-                mark("PAYLOAD-CONTINUE", payload
-                        ? "payload.bin verified; continuing to the primitive stage"
-                        : "payload.bin missing; continuing without payload");
 
-                mark("PRIMITIVE-START", "starting establishPrimitive; payload execution waits for PRIMITIVE-OK");
         state("running the primitive...", "warn");
         await new Promise(r => setTimeout(r, 0));
 
         const PRIMITIVE_LOUD = /FAIL|ERROR|THREW|RETRY|ABORT|PASS/i;
         const carrier = await establishPrimitive({
-            maxAttempts: 1,
+            maxAttempts: 6,
             onEvent: (t, d, a) => (PRIMITIVE_LOUD.test(t) ? mark : trace)
                 (t, (a != null ? "[" + a + "] " : "") + (d || ""))
         });
@@ -2266,22 +2262,10 @@ let allDone = false;
                         && params.get("payload") !== "0") {
                         state("payload...", "warn");
                         const sz = (payload.length + 0x3fff) & ~0x3fff;
-                        let m = sc(SYS.mmap, 0, sz, 7, 0x1002, -1, 0);
-                        let mapMode = "private-anon";
-                        let mapErr = m.i32 === -1 ? errno() : 0;
-                        if (m.i32 === -1) {
-                            const jitFd = sc(SYS.jitshm_create, 0, sz, 7).i32;
-                            if (jitFd >= 0) {
-                                m = sc(SYS.mmap, 0, sz, 7, 1, jitFd, 0);
-                                sc(SYS.close, jitFd);
-                                mapMode = "jit-shared";
-                                mapErr = m.i32 === -1 ? errno() : 0;
-                            }
-                        }
+                        const m = sc(SYS.mmap, 0, sz, 7, 0x1002, -1, 0);
                         const entry = new int64(m.lo, m.hi);
                         mark("PAYLOAD-MAP", "size=0x" + sz.toString(16)
-                            + " rwx=" + mapMode + " " + entry
-                            + (m.i32 === -1 ? " errno=" + mapErr : ""));
+                            + " rwx=" + entry);
                         if (entry.hi > 0) {
                             for (let i = 0; i < payload.length; ++i)
                                 p.write1(entry.add32(i), payload[i]);
